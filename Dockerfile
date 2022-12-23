@@ -1,4 +1,4 @@
-ARG FROM_ARCH=amd64
+ARG FROM_ARCH=arm64v8
 
 FROM alpine as builder
 
