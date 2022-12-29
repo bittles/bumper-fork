@@ -307,7 +307,7 @@ class XMPPAsyncClient:
             ctl_to = xml.get("to")
             if not "from" in xml.attrib:
                 xml.attrib["from"] = "{}".format(self.bumper_jid)
-            if "errno" and not "errno=''" in data:
+            if "errno" in data and not "errno=''" in data:
                 xmppserverlog.error(f"Error from bot - {data}")                
             if (
                 "errno='103'" in data
