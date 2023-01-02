@@ -1,5 +1,8 @@
 ![License GPLv3](https://img.shields.io/github/license/bmartin5692/bumper.svg?color=brightgreen)
 
+# Small fork from bmartin's great bumper
+This is a small fork because my N79 would send payloads with errno='' which would then trigger error logging in bumper.  I just put a catch in to only create an error if errno is a number. Build with 'docker build -t bmartin5692/bumper:forked .' and use the docker-compose.yaml in the example folder, make sure to put the announce IP address in there.
+
 # Bumper 
 
 Bumper is a standalone and self-hosted implementation of the central server used by Ecovacs vacuum robots.  Bumper allows you to have full control of your Ecovacs robots, without the robots or app talking to the Ecovacs servers and transmitting data outside of your home.

@@ -25,7 +25,7 @@ services:
       - ./nginx/:/etc/nginx:ro # See config file below
 
   bumper:
-    image: bmartin5692/bumper
+    image: bmartin5692/bumper:forked
     restart: unless-stopped
     networks:
       bumper:
