@@ -9,7 +9,7 @@ import aiohttp_jinja2
 import jinja2
 from aiohttp import web
 
-from bumper import plugins
+from bumper import plugins, enable_mqtt, enable_xmpp
 from bumper.models import *
 
 
@@ -82,7 +82,7 @@ class ConfServer:
         
         # Load plugins
         for plug in bumper.discovered_plugins:
-            if isinstance(bumper.discovered_plugins[plug].plugin, bumper.plugins.ConfServerApp):                
+            if isinstance(bumper.discovered_plugins[plug].plugin, bumper.plugins.ConfServerApp):
                 plugin = bumper.discovered_plugins[plug].plugin                
                 if plugin.plugin_type == "sub_api": # app or sub_api
                     if plugin.sub_api in apis:
@@ -172,19 +172,23 @@ class ConfServer:
 
             bots = bumper.db_get().table("bots").all()
             clients = bumper.db_get().table("clients").all()
-            helperbot = bumper.mqtt_helperbot.Client.session.transitions.state
-            mqttserver = bumper.mqtt_server.broker
-            xmppserver = bumper.xmpp_server
+            if enable_xmpp:
+                xmppserver = bumper.xmpp_server
+            if enable_mqtt:
+                helperbot = bumper.mqtt_helperbot.Client.session.transitions.state
+                mqttserver = bumper.mqtt_server.broker
+
             mq_sessions = []
-            for sess in mqttserver._sessions:
-                tmpsess = []
-                tmpsess.append({
-                    "username": mqttserver._sessions[sess][0].username,
-                    "client_id": mqttserver._sessions[sess][0].client_id,
-                    "state": mqttserver._sessions[sess][0].transitions.state,
-                })
-               
-                mq_sessions.append(tmpsess)
+            if enable_mqtt:
+                for sess in mqttserver._sessions:
+                    tmpsess = []
+                    tmpsess.append({
+                        "username": mqttserver._sessions[sess][0].username,
+                        "client_id": mqttserver._sessions[sess][0].client_id,
+                        "state": mqttserver._sessions[sess][0].transitions.state,
+                    })
+
+                    mq_sessions.append(tmpsess)
             all = {
                 "bots": bots,
                 "clients": clients,
@@ -269,50 +273,51 @@ class ConfServer:
             return await handler(request)
 
     async def restart_Helper(self):
-
-        await bumper.mqtt_helperbot.Client.disconnect()
-        asyncio.create_task(bumper.mqtt_helperbot.start_helper_bot())
+        if enable_mqtt:
+            await bumper.mqtt_helperbot.Client.disconnect()
+            asyncio.create_task(bumper.mqtt_helperbot.start_helper_bot())
 
     async def restart_MQTT(self):
-        
-        if not (bumper.mqtt_server.broker.transitions.state == "stopped" or bumper.mqtt_server.broker.transitions.state == "not_started"):
-            # close session writers - this was required so bots would reconnect properly after restarting
-            for sess in list(bumper.mqtt_server.broker._sessions):                
-                sessobj = bumper.mqtt_server.broker._sessions[sess][1]
-                if sessobj.session.transitions.state == "connected":
-                    await sessobj.writer.close()
+        if enable_mqtt:
+            if not (bumper.mqtt_server.broker.transitions.state == "stopped" or bumper.mqtt_server.broker.transitions.state == "not_started"):
+                # close session writers - this was required so bots would reconnect properly after restarting
+                for sess in list(bumper.mqtt_server.broker._sessions):                
+                    sessobj = bumper.mqtt_server.broker._sessions[sess][1]
+                    if sessobj.session.transitions.state == "connected":
+                        await sessobj.writer.close()
 
-            #await bumper.mqtt_server.broker.shutdown()
+                #await bumper.mqtt_server.broker.shutdown()
+                aloop = asyncio.get_event_loop()
+                aloop.call_later(
+                0.1, lambda: asyncio.create_task(bumper.mqtt_server.broker.shutdown())
+                )  # In .1 seconds shutdown broker
+
+
             aloop = asyncio.get_event_loop()
             aloop.call_later(
-            0.1, lambda: asyncio.create_task(bumper.mqtt_server.broker.shutdown())
-            )  # In .1 seconds shutdown broker
-
-        
-        aloop = asyncio.get_event_loop()
-        aloop.call_later(
-           1.5, lambda: asyncio.create_task(bumper.mqtt_server.broker_coro())
-        )  # In 1.5 seconds start broker
+               1.5, lambda: asyncio.create_task(bumper.mqtt_server.broker_coro())
+            )  # In 1.5 seconds start broker
 
     async def restart_XMPP(self):
-        bumper.xmpp_server.disconnect()
-        await bumper.xmpp_server.start_async_server()
+        if enable_xmpp:
+            bumper.xmpp_server.disconnect()
+            await bumper.xmpp_server.start_async_server()
 
     async def handle_RestartService(self, request):
         try:
             service = request.match_info.get("service", "")
-            if service == "Helperbot":
+            if service == "Helperbot" and enable_mqtt:
                 await self.restart_Helper()
                 return web.json_response({"status": "complete"})
-            elif service == "MQTTServer":
+            elif service == "MQTTServer" and enable_mqtt:
                 asyncio.create_task(self.restart_MQTT())
                 aloop = asyncio.get_event_loop()
                 aloop.call_later(
                     5, lambda: asyncio.create_task(self.restart_Helper())
                 )  # In 5 seconds restart Helperbot
-                
                 return web.json_response({"status": "complete"})
-            elif service == "XMPPServer":
+
+            elif service == "XMPPServer" and enable_xmpp:
                 await self.restart_XMPP()
                 return web.json_response({"status": "complete"})
             else:

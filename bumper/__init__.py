@@ -373,6 +373,9 @@ def first_run():
 def main(argv=None):
     import argparse
 
+    global enable_mqtt
+    global enable_xmpp
+
     global bumper_debug
     global bumper_listen
     global bumper_announce_ip
