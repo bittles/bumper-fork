@@ -50,10 +50,10 @@ bumper_listen = os.environ.get("BUMPER_LISTEN") or socket.gethostbyname(
 bumper_announce_ip = os.environ.get("BUMPER_ANNOUNCE_IP") or bumper_listen
 
 # Only import if enabled
-global enable_mqtt
-enable_mqtt = strtobool(os.environ.get("ENABLE_MQTT")) or True
-global enable_xmpp
-enable_xmpp = strtobool(os.environ.get("ENABLE_XMPP")) or True
+enable_mqtt = True
+enable_xmpp = False
+enable_mqtt = strtobool(os.environ.get("ENABLE_MQTT"))
+enable_xmpp = strtobool(os.environ.get("ENABLE_XMPP"))
 if enable_mqtt:
     from bumper.mqttserver import MQTTServer, MQTTHelperBot
 if enable_xmpp:
