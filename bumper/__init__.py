@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
 from bumper.confserver import ConfServer
-from bumper.mqttserver import MQTTServer, MQTTHelperBot
-from bumper.xmppserver import XMPPServer
 from bumper.models import *
 from bumper.db import *
 import asyncio
@@ -51,10 +49,14 @@ bumper_listen = os.environ.get("BUMPER_LISTEN") or socket.gethostbyname(
 
 bumper_announce_ip = os.environ.get("BUMPER_ANNOUNCE_IP") or bumper_listen
 
-# Other
+# Only import if enabled
 enable_mqtt = strtobool(os.environ.get("ENABLE_MQTT")) or True
 enable_xmpp = strtobool(os.environ.get("ENABLE_XMPP")) or True
-
+if enable_mqtt:
+    from bumper.mqttserver import MQTTServer, MQTTHelperBot
+if enable_xmpp:
+    from bumper.xmppserver import XMPPServer
+# Other
 bumper_debug = strtobool(os.environ.get("BUMPER_DEBUG")) or False
 use_auth = False
 token_validity_seconds = 3600  # 1 hour
@@ -106,59 +108,61 @@ else:
 # Override the logging level
 # confserverlog.setLevel(logging.INFO)
 
-mqttserverlog = logging.getLogger("mqttserver")
-if not log_to_stdout:
-    mqtt_rotate = RotatingFileHandler(
-        "logs/mqttserver.log", maxBytes=5000000, backupCount=5
-    )
-    mqtt_rotate.setFormatter(logformat)
-    mqttserverlog.addHandler(mqtt_rotate)
-else:
-    mqttserverlog.addHandler(logging.StreamHandler(sys.stdout))
-# Override the logging level
-# mqttserverlog.setLevel(logging.INFO)
+if enable_mqtt:
+    mqttserverlog = logging.getLogger("mqttserver")
+    if not log_to_stdout:
+        mqtt_rotate = RotatingFileHandler(
+            "logs/mqttserver.log", maxBytes=5000000, backupCount=5
+        )
+        mqtt_rotate.setFormatter(logformat)
+        mqttserverlog.addHandler(mqtt_rotate)
+    else:
+        mqttserverlog.addHandler(logging.StreamHandler(sys.stdout))
+    # Override the logging level
+    # mqttserverlog.setLevel(logging.INFO)
 
-### Additional MQTT Logs
-translog = logging.getLogger("transitions")
-if not log_to_stdout:
-    translog.addHandler(mqtt_rotate)
-else:
-    translog.addHandler(logging.StreamHandler(sys.stdout))
-translog.setLevel(logging.CRITICAL + 1)  # Ignore this logger
-logging.getLogger("passlib").setLevel(logging.CRITICAL + 1)  # Ignore this logger
-brokerlog = logging.getLogger("hbmqtt.broker")
-#brokerlog.setLevel(
-#    logging.CRITICAL + 1
-#)  # Ignore this logger #There are some sublogs that could be set if needed (.plugins)
-if not log_to_stdout:
-    brokerlog.addHandler(mqtt_rotate)
-else:
-    brokerlog.addHandler(logging.StreamHandler(sys.stdout))
-protolog = logging.getLogger("hbmqtt.mqtt.protocol")
-#protolog.setLevel(
-#    logging.CRITICAL + 1
-#)  # Ignore this logger
-if not log_to_stdout:
-    protolog.addHandler(mqtt_rotate)
-else:
-    protolog.addHandler(logging.StreamHandler(sys.stdout))
-clientlog = logging.getLogger("hbmqtt.client")
-#clientlog.setLevel(logging.CRITICAL + 1)  # Ignore this logger
-if not log_to_stdout:
-    clientlog.addHandler(mqtt_rotate)
-else:
-    clientlog.addHandler(logging.StreamHandler(sys.stdout))
-helperbotlog = logging.getLogger("helperbot")
-if not log_to_stdout:
-    helperbot_rotate = RotatingFileHandler(
-        "logs/helperbot.log", maxBytes=5000000, backupCount=5
-    )
-    helperbot_rotate.setFormatter(logformat)
-    helperbotlog.addHandler(helperbot_rotate)
-else:
-    helperbotlog.addHandler(logging.StreamHandler(sys.stdout))
-# Override the logging level
-# helperbotlog.setLevel(logging.INFO)
+    ### Additional MQTT Logs
+    translog = logging.getLogger("transitions")
+    if not log_to_stdout:
+        translog.addHandler(mqtt_rotate)
+    else:
+        translog.addHandler(logging.StreamHandler(sys.stdout))
+    translog.setLevel(logging.CRITICAL + 1)  # Ignore this logger
+    logging.getLogger("passlib").setLevel(logging.CRITICAL + 1)  # Ignore this logger
+    brokerlog = logging.getLogger("hbmqtt.broker")
+    #brokerlog.setLevel(
+    #    logging.CRITICAL + 1
+    #)  # Ignore this logger #There are some sublogs that could be set if needed (.plugins)
+    if not log_to_stdout:
+        brokerlog.addHandler(mqtt_rotate)
+    else:
+        brokerlog.addHandler(logging.StreamHandler(sys.stdout))
+    protolog = logging.getLogger("hbmqtt.mqtt.protocol")
+    #protolog.setLevel(
+    #    logging.CRITICAL + 1
+    #)  # Ignore this logger
+    if not log_to_stdout:
+        protolog.addHandler(mqtt_rotate)
+    else:
+        protolog.addHandler(logging.StreamHandler(sys.stdout))
+    clientlog = logging.getLogger("hbmqtt.client")
+    #clientlog.setLevel(logging.CRITICAL + 1)  # Ignore this logger
+    if not log_to_stdout:
+        clientlog.addHandler(mqtt_rotate)
+    else:
+        clientlog.addHandler(logging.StreamHandler(sys.stdout))
+
+    helperbotlog = logging.getLogger("helperbot")
+    if not log_to_stdout:
+        helperbot_rotate = RotatingFileHandler(
+            "logs/helperbot.log", maxBytes=5000000, backupCount=5
+        )
+        helperbot_rotate.setFormatter(logformat)
+        helperbotlog.addHandler(helperbot_rotate)
+    else:
+        helperbotlog.addHandler(logging.StreamHandler(sys.stdout))
+    # Override the logging level
+    # helperbotlog.setLevel(logging.INFO)
 
 boterrorlog = logging.getLogger("boterror")
 if not log_to_stdout:
@@ -172,25 +176,29 @@ else:
 # Override the logging level
 # boterrorlog.setLevel(logging.INFO)
 
-xmppserverlog = logging.getLogger("xmppserver")
-if not log_to_stdout:
-    xmpp_rotate = RotatingFileHandler(
-        "logs/xmppserver.log", maxBytes=5000000, backupCount=5
-    )
-    xmpp_rotate.setFormatter(logformat)
-    xmppserverlog.addHandler(xmpp_rotate)
-else:
-    xmppserverlog.addHandler(logging.StreamHandler(sys.stdout))
-# Override the logging level
-# xmppserverlog.setLevel(logging.INFO)
+if enable_xmpp:
+    xmppserverlog = logging.getLogger("xmppserver")
+    if not log_to_stdout:
+        xmpp_rotate = RotatingFileHandler(
+            "logs/xmppserver.log", maxBytes=5000000, backupCount=5
+        )
+        xmpp_rotate.setFormatter(logformat)
+        xmppserverlog.addHandler(xmpp_rotate)
+    else:
+        xmppserverlog.addHandler(logging.StreamHandler(sys.stdout))
+    # Override the logging level
+    # xmppserverlog.setLevel(logging.INFO)
 
 logging.getLogger("asyncio").setLevel(logging.CRITICAL + 1)  # Ignore this logger
 
+if enable_mqtt:
+    mqtt_listen_port = 8883
 
-mqtt_listen_port = 8883
 conf1_listen_port = 443
 conf2_listen_port = 8007
-xmpp_listen_port = 5223
+
+if enable_xmpp:
+    xmpp_listen_port = 5223
 
 
 async def start():
@@ -226,33 +234,41 @@ async def start():
         return
 
     bumperlog.info("Starting Bumper")
-    global mqtt_server
-    mqtt_server = MQTTServer((bumper_listen, mqtt_listen_port))
-    global mqtt_helperbot
-    mqtt_helperbot = MQTTHelperBot((bumper_listen, mqtt_listen_port))
+    
+    if enable_mqtt:
+        global mqtt_server
+        mqtt_server = MQTTServer((bumper_listen, mqtt_listen_port))
+        global mqtt_helperbot
+        mqtt_helperbot = MQTTHelperBot((bumper_listen, mqtt_listen_port))
+    
     global conf_server
     conf_server = ConfServer((bumper_listen, conf1_listen_port), usessl=True)
     global conf_server_2
     conf_server_2 = ConfServer((bumper_listen, conf2_listen_port), usessl=False)
-    global xmpp_server
-    xmpp_server = XMPPServer((bumper_listen, xmpp_listen_port))
 
-    # Start MQTT Server
-    # await start otherwise we get an error connecting the helper bot
-    await asyncio.create_task(mqtt_server.broker_coro())
+    if enable xmpp:
+        global xmpp_server
+        xmpp_server = XMPPServer((bumper_listen, xmpp_listen_port))
 
-    # Start MQTT Helperbot
-    asyncio.create_task(mqtt_helperbot.start_helper_bot())
+    if enable_mqtt:
+        # Start MQTT Server
+        # await start otherwise we get an error connecting the helper bot
+        await asyncio.create_task(mqtt_server.broker_coro())
 
-    # Start XMPP Server
-    asyncio.create_task(xmpp_server.start_async_server())
+        # Start MQTT Helperbot
+        asyncio.create_task(mqtt_helperbot.start_helper_bot())
 
-    # Wait for helperbot to connect first
-    while mqtt_helperbot.Client is None:
-        await asyncio.sleep(0.1)
+    if enable_xmpp:
+        # Start XMPP Server
+        asyncio.create_task(xmpp_server.start_async_server())
 
-    while not mqtt_helperbot.Client.session.transitions.state == "connected":
-        await asyncio.sleep(0.1)
+    if enable_mqtt:
+        # Wait for helperbot to connect first
+        while mqtt_helperbot.Client is None:
+            await asyncio.sleep(0.1)
+
+        while not mqtt_helperbot.Client.session.transitions.state == "connected":
+            await asyncio.sleep(0.1)
 
     # Start web servers
     conf_server.confserver_app()
@@ -276,18 +292,20 @@ async def shutdown():
 
         await conf_server.stop_server()
         await conf_server_2.stop_server()
-        if mqtt_server.broker.transitions.state == "started":
-            await mqtt_server.broker.shutdown()
-        elif mqtt_server.broker.transitions.state == "starting":
-            while mqtt_server.broker.transitions.state == "starting":
-                await asyncio.sleep(0.1)
+        if enable_mqtt:
             if mqtt_server.broker.transitions.state == "started":
                 await mqtt_server.broker.shutdown()
-                await mqtt_helperbot.Client.disconnect()
-        if xmpp_server.server:
-            if xmpp_server.server._serving:
-                xmpp_server.server.close()
-            await xmpp_server.server.wait_closed()
+            elif mqtt_server.broker.transitions.state == "starting":
+                while mqtt_server.broker.transitions.state == "starting":
+                    await asyncio.sleep(0.1)
+                if mqtt_server.broker.transitions.state == "started":
+                    await mqtt_server.broker.shutdown()
+                    await mqtt_helperbot.Client.disconnect()
+        if enable_xmpp:
+            if xmpp_server.server:
+                if xmpp_server.server._serving:
+                    xmpp_server.server.close()
+                await xmpp_server.server.wait_closed()
         global shutting_down
         shutting_down = True
 
