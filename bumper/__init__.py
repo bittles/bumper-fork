@@ -39,7 +39,6 @@ certs_dir = os.environ.get("BUMPER_CERTS") or os.path.join(bumper_dir, "certs")
 os.makedirs(certs_dir, exist_ok=True)  # Ensure data directory exists or create
 
 
-
 # Certs
 ca_cert = os.environ.get("BUMPER_CA") or os.path.join(certs_dir, "ca.crt")
 server_cert = os.environ.get("BUMPER_CERT") or os.path.join(certs_dir, "bumper.crt")
@@ -50,10 +49,12 @@ bumper_listen = os.environ.get("BUMPER_LISTEN") or socket.gethostbyname(
     socket.gethostname()
 )
 
-
 bumper_announce_ip = os.environ.get("BUMPER_ANNOUNCE_IP") or bumper_listen
 
 # Other
+enable_mqtt = strtobool(os.environ.get("ENABLE_MQTT")) or True
+enable_xmpp = strtobool(os.environ.get("ENABLE_XMPP")) or True
+
 bumper_debug = strtobool(os.environ.get("BUMPER_DEBUG")) or False
 use_auth = False
 token_validity_seconds = 3600  # 1 hour
