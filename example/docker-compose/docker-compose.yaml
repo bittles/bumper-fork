@@ -38,6 +38,8 @@ services:
       BUMPER_LISTEN: 0.0.0.0
       # BUMPER_DEBUG: "true"
       LOG_TO_STDOUT: "true"
+      # ENABLE_XMPP: "false" # uncomment to disable xmpp
+      # ENABMPE_MQTT: "false" # uncomment to disable mqtt
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro

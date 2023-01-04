@@ -1,7 +1,14 @@
 ![License GPLv3](https://img.shields.io/github/license/bmartin5692/bumper.svg?color=brightgreen)
 
 # Small fork from bmartin's great bumper
-This is a small fork because my N79 would send payloads with errno='' which would then trigger error logging in bumper.  I just put a catch in to only create an error if errno is an actual number. If your debug logs are throwing errors and the errno is '' then this may help you.  Build with ```docker build -t bmartin5692/bumper:forked .``` and use the docker-compose.yaml in the example folder, make sure to put the announce IP address in there.
+This is a small fork because my N79 would send payloads with errno='' which would then trigger error logging in bumper.  I just put a catch in to only create an error if errno is an actual number. If your debug logs are throwing errors and the errno is '' then this may help you.  
+
+Build with:
+```docker build -t bmartin5692/bumper:forked .```
+and use the docker-compose.yaml in the example folder, make sure to put the announce IP address in there.
+
+### 1/4/23:
+Since I only have an N79 which uses XMPP I added environment variables to enable mqtt or xmpp, selectively, and seems to be working.  Massive amounts of mqtt pinging and attempting communication in the debug logs that aren't there now and make it a lot more readable.
 
 # Bumper 
 
