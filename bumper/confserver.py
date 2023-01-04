@@ -9,9 +9,14 @@ import aiohttp_jinja2
 import jinja2
 from aiohttp import web
 
-from bumper import plugins, enable_mqtt, enable_xmpp
+from bumper import plugins
 from bumper.models import *
 
+
+enable_mqtt = True
+enable_xmpp = True
+enable_mqtt = strtobool(os.environ.get("ENABLE_MQTT"))
+enable_xmpp = strtobool(os.environ.get("ENABLE_XMPP"))
 
 class aiohttp_filter(logging.Filter):
     def filter(self, record):

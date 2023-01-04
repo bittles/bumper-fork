@@ -51,7 +51,7 @@ bumper_announce_ip = os.environ.get("BUMPER_ANNOUNCE_IP") or bumper_listen
 
 # Only import if enabled
 enable_mqtt = True
-enable_xmpp = False
+enable_xmpp = True
 enable_mqtt = strtobool(os.environ.get("ENABLE_MQTT"))
 enable_xmpp = strtobool(os.environ.get("ENABLE_XMPP"))
 if enable_mqtt:
