@@ -246,7 +246,7 @@ async def start():
     global conf_server_2
     conf_server_2 = ConfServer((bumper_listen, conf2_listen_port), usessl=False)
 
-    if enable xmpp:
+    if enable_xmpp:
         global xmpp_server
         xmpp_server = XMPPServer((bumper_listen, xmpp_listen_port))
 
