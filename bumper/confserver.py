@@ -12,6 +12,11 @@ from aiohttp import web
 from bumper import plugins
 from bumper.models import *
 
+def strtobool(strbool):
+    if str(strbool).lower() in ["true", "1", "t", "y", "on", "yes"]:
+        return True
+    else:
+        return False
 
 enable_mqtt = True
 enable_xmpp = True
